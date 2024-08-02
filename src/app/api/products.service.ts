@@ -52,8 +52,8 @@ export class ApiProductsService implements IProductService {
     );
   }
 
-  public delete(): Observable<IResponseApi<IProduct[]>> {
-    return this._http.delete<IResponseApi<IProduct[]>>(`${this._endPoint}`, this.httpOptions)
+  public delete(productId: number): Observable<IResponseApi<IProduct>> {
+    return this._http.delete<IResponseApi<IProduct>>(`${this._endPoint}/${productId}`, this.httpOptions)
     .pipe(
       catchError(this.errorHandler.handleError)
     );

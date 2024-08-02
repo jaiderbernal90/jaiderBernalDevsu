@@ -1,16 +1,9 @@
-@if(show){
-  <div class="modal" >
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>{{ title }}</h2>
-      </div>
-      <div class="modal-body">
-        <p>{{ message }}</p>
-      </div>
-      <div class="modal-footer">
-        <button (click)="confirm()">Confirmar</button>
-        <button (click)="cancel()">Cancelar</button>
-      </div>
+<div class="confirm-dialog">
+  <div class="confirm-dialog-content">
+    <h2>¿Estás seguro de eliminar el producto {{ productName() }}?</h2>
+    <div class="actions">
+      <button class="btn-cancel" (click)="onCancel()">Cancelar</button>
+      <button class="btn-confirm" (click)="onConfirm()">Confirmar</button>
     </div>
   </div>
-}
+</div>

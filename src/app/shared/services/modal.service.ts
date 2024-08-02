@@ -1,0 +1,37 @@
+import { Injectable, signal } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ModalService {
+  private showConfirmDialogSignal = signal(false);
+  private confirmCallback: (() => void) | null = null;
+  private productToDelete: string | null = null;
+
+  showConfirmDialog(): boolean {
+    return this.showConfirmDialogSignal();
+  }
+
+  openConfirmDialog(productName: string, callback: () => void): void {
+    this.productToDelete = productName;
+    this.confirmCallback = callback;
+    this.showConfirmDialogSignal.set(true);
+  }
+
+  closeConfirmDialog(): void {
+    this.showConfirmDialogSignal.set(false);
+    this.confirmCallback = null;
+    this.productToDelete = null;
+  }
+
+  confirmDelete(): void {
+    if (this.confirmCallback) {
+      this.confirmCallback();
+    }
+    this.closeConfirmDialog();
+  }
+
+  getProductToDelete(): string | null {
+    return this.productToDelete;
+  }
+}

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { SearchComponent } from '../../../../shared/components/search/search.component';
 import { CardComponent } from '../../../../shared/components/card/card.component';
 import { TableComponent } from '../../../../shared/components/table/table.component';
@@ -8,6 +8,7 @@ import { ProductsService } from '@features/products/services/products.service';
 import { FilterProductsPipe } from '@features/products/pipes/filter-products.pipe';
 import { PaginationService } from '@shared/services/pagination.service';
 import { IProductForTable } from '@features/products/interfaces/IProduct';
+import { ModalService } from '@shared/services/modal.service';
 
 @Component({
   selector: 'app-list-products',
@@ -26,7 +27,7 @@ import { IProductForTable } from '@features/products/interfaces/IProduct';
 export class ListProductsComponent implements OnInit {
   public readonly _productsSvc = inject(ProductsService);
   public readonly _paginationSvc = inject(PaginationService);
-  public paginatedProducts: IProductForTable[] = [];
+  public readonly _modalSvc = inject(ModalService);
 
   constructor() {}
 
@@ -35,14 +36,12 @@ export class ListProductsComponent implements OnInit {
   }
 
   public getProducts(): void {
-    this._productsSvc
-      .findAll()
-      .subscribe((res) => this.updatePaginatedProducts());
+    this._productsSvc.findAll().subscribe((res) => {});
   }
 
   public updatePaginatedProducts(): void {
-    this.paginatedProducts = this._paginationSvc.getPaginatedData(
-      this._productsSvc.products()
+    this._paginationSvc.paginatedData.set(
+      this._paginationSvc.getPaginatedData(this._productsSvc.products())
     );
   }
 
@@ -54,6 +53,6 @@ export class ListProductsComponent implements OnInit {
           this._productsSvc.products().length
         );
 
-    this.updatePaginatedProducts();
+    this._paginationSvc.updatePaginatedData(this._productsSvc.products());
   }
 }

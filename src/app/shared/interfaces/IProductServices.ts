@@ -8,6 +8,6 @@ export interface IProductService{
   findAll(): Observable<IResponseApi<IProduct[]>> ;
   findOne(id: number): Observable<IProduct>;
   update(id: number, product: IProduct): Observable<IResponseApi<IProduct[]>>;
-  delete(): Observable<IResponseApi<IProduct[]>>;
+  delete(idProduct: number): Observable<IResponseApi<IProduct>>;
   verificationId(id:number): Observable<boolean>;
 }

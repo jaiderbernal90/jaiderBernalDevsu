@@ -8,6 +8,7 @@ import { ProductsService } from '@features/products/services/products.service';
 import { iconArrowLeft, iconArrowRight } from '../../utils/consts';
 import { NgClass } from '@angular/common';
 import { ConfirmationModalComponent } from '../confirmation-modal/confirmation-modal.component';
+import { ModalService } from '@shared/services/modal.service';
 
 @Component({
   selector: 'app-table',
@@ -21,6 +22,7 @@ export class TableComponent {
   @Input() items: GenericObject[] = [];
   public readonly _paginationSvc = inject(PaginationService);
   public readonly _productsSvc = inject(ProductsService);
+  public readonly _modalSvc = inject(ModalService);
   onPageChange = output<boolean>();
   onChangeItemsPerPage = output<number>();
   iconInfo: SafeHtml = this.sanitizer.bypassSecurityTrustHtml(iconInfo);

@@ -12,7 +12,7 @@ export class DataTransformationService {
   constructor(private readonly _sharedSvc: SharedService) {}
 
   public transformProductsToTableData(data: IProductForTable[]): IProductForTable[] {
-    return data.map((product) => ({
+     return data.map((product) => ({
       ...product,
       logo: product.logo
         ? `<img src="${product.logo}" alt="Logo">`

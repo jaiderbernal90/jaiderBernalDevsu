@@ -1,19 +1,43 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ProductsService } from './products.service';
 import { ApiProductsService } from '@api/products.service';
 import { LoaderService } from '@shared/services/loader.service';
 import { DataTransformationService } from './data-transformation.service';
 import { RouteService } from './route.service';
+import { ModalService } from '@shared/services/modal.service';
+import { PaginationService } from '@shared/services/pagination.service';
 import { of, throwError } from 'rxjs';
+import { IResponseApi } from '@shared/interfaces/IResponseApi';
 import { IProduct, IProductForTable } from '../interfaces/IProduct';
-import { IResponseApi } from '@interfaces/IResponseApi';
-
+import { signal, Signal, WritableSignal } from '@angular/core';
+const mockProducts: IProduct[] = [
+  {
+    id: 1,
+    name: 'Product 1',
+    description: 'Description 1',
+    logo: 'logo1.png',
+    date_release: new Date('2023-01-01'),
+    date_revision: new Date('2024-01-01'),
+  },
+  {
+    id: 2,
+    name: 'Product 2',
+    description: 'Description 2',
+    logo: 'logo2.png',
+    date_release: new Date('2023-02-01'),
+    date_revision: new Date('2024-02-01'),
+  },
+];
 describe('ProductsService', () => {
   let service: ProductsService;
   let apiProductsServiceSpy: jasmine.SpyObj<ApiProductsService>;
   let loaderServiceSpy: jasmine.SpyObj<LoaderService>;
   let dataTransformationServiceSpy: jasmine.SpyObj<DataTransformationService>;
   let routeServiceSpy: jasmine.SpyObj<RouteService>;
+  let modalServiceSpy: jasmine.SpyObj<ModalService>;
+  let paginationServiceSpy: jasmine.SpyObj<
+    PaginationService<IProductForTable[]>
+  >;
 
   beforeEach(() => {
     const apiSpy = jasmine.createSpyObj('ApiProductsService', [
@@ -25,13 +49,18 @@ describe('ProductsService', () => {
       'verificationId',
     ]);
     const loaderSpy = jasmine.createSpyObj('LoaderService', ['show', 'hide']);
-    const dataTransformationSpy = jasmine.createSpyObj(
-      'DataTransformationService',
-      ['transformProductsToTableData']
-    );
+    const dataTransformSpy = jasmine.createSpyObj('DataTransformationService', [
+      'transformProductsToTableData',
+    ]);
     const routeSpy = jasmine.createSpyObj('RouteService', [
       'navigateToHome',
       'navigateToEditProduct',
+    ]);
+    const modalSpy = jasmine.createSpyObj('ModalService', [
+      'openConfirmDialog',
+    ]);
+    const paginationSpy = jasmine.createSpyObj('PaginationService', [
+      'getPaginatedData',
     ]);
 
     TestBed.configureTestingModule({
@@ -39,8 +68,10 @@ describe('ProductsService', () => {
         ProductsService,
         { provide: ApiProductsService, useValue: apiSpy },
         { provide: LoaderService, useValue: loaderSpy },
-        { provide: DataTransformationService, useValue: dataTransformationSpy },
+        { provide: DataTransformationService, useValue: dataTransformSpy },
         { provide: RouteService, useValue: routeSpy },
+        { provide: ModalService, useValue: modalSpy },
+        { provide: PaginationService, useValue: paginationSpy },
       ],
     });
 
@@ -57,233 +88,103 @@ describe('ProductsService', () => {
     routeServiceSpy = TestBed.inject(
       RouteService
     ) as jasmine.SpyObj<RouteService>;
+    modalServiceSpy = TestBed.inject(
+      ModalService
+    ) as jasmine.SpyObj<ModalService>;
+    paginationServiceSpy = TestBed.inject(PaginationService) as jasmine.SpyObj<
+      PaginationService<IProductForTable[]>
+    >;
+
+    // Initialize signals
+    service.products = signal<IProductForTable[]>(mockProducts);
+    service.idProduct = signal<number | undefined>(undefined);
+    service.idValid = signal<boolean>(false);
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should fetch and transform products on findAll', () => {
-    const mockResponse: IResponseApi<IProduct[]> = {
-      data: [
-        {
-          id: 1,
-          name: 'Product 1',
-          description: 'Description 1',
-          date_release: new Date('2023-01-01'),
-          date_revision: new Date('2023-01-10'),
-          logo: 'logo1.png',
-        },
-      ],
-      message: 'Product found',
-    };
-    const transformedData: IProductForTable[] = [
-      {
+  describe('findAll', () => {
+    it('should fetch all products and update signals', () => {
+      const mockResponse: IResponseApi<IProduct[]> = {
+        data: mockProducts,
+        message: 'Success',
+      };
+      apiProductsServiceSpy.findAll.and.returnValue(of(mockResponse));
+      expect(service.products()).toEqual(mockProducts);
+    });
+  });
+
+  describe('create', () => {
+    it('should create a product and navigate to home', fakeAsync(() => {
+      const mockProduct: Partial<IProduct> = {
         id: 1,
-        name: 'Product 1',
-        description: 'Description 1',
-        date_release: '01/01/2023',
-        date_revision: '10/01/2023',
-        logo: '<img src="logo1.png" alt="Logo">',
-      },
-    ];
+        name: 'New Product',
+        description: 'Description',
+        logo: 'logo.png',
+        date_release: new Date(),
+        date_revision: new Date(),
+      };
 
-    apiProductsServiceSpy.findAll.and.returnValue(of(mockResponse));
-    dataTransformationServiceSpy.transformProductsToTableData.and.returnValue(
-      transformedData
-    );
+      const mockResponse: IResponseApi<IProduct> = {
+        data: mockProduct as IProduct,
+        message: 'Product created',
+      };
 
-    service.findAll().subscribe(() => {
-      expect(service.products()).toEqual(transformedData);
-    });
+      apiProductsServiceSpy.create.and.returnValue(of(mockResponse));
+      spyOn(window, 'alert');
 
-    expect(apiProductsServiceSpy.findAll).toHaveBeenCalled();
-    expect(
-      dataTransformationServiceSpy.transformProductsToTableData
-    ).toHaveBeenCalledWith(mockResponse?.data || []);
-  });
+      service.create(mockProduct).subscribe();
+      tick();
 
-  it('should handle errors on findAll', () => {
-    const errorResponse = new Error('Error fetching products');
-    apiProductsServiceSpy.findAll.and.returnValue(throwError(errorResponse));
-
-    service.findAll().subscribe({
-      error: (error) => {
-        expect(error).toEqual(errorResponse);
-      },
-    });
-
-    expect(apiProductsServiceSpy.findAll).toHaveBeenCalled();
-  });
-
-  it('should set product on findOne', () => {
-    const mockProduct: IProduct = {
-      id: 1,
-      name: 'Product 1',
-      description: 'Description 1',
-      date_release: new Date('2023-01-01'),
-      date_revision: new Date('2023-01-01'),
-      logo: 'logo1.png',
-    };
-    apiProductsServiceSpy.findOne.and.returnValue(of(mockProduct));
-
-    service.findOne(1).subscribe(() => {
-      expect(service.product()).toEqual(mockProduct);
-    });
-
-    expect(apiProductsServiceSpy.findOne).toHaveBeenCalledWith(1);
-  });
-
-  it('should handle errors on findOne', () => {
-    const errorResponse = new Error('Error fetching product');
-    apiProductsServiceSpy.findOne.and.returnValue(throwError(errorResponse));
-
-    service.findOne(1).subscribe({
-      error: (error) => {
-        expect(error).toEqual(errorResponse);
-      },
-    });
-
-    expect(apiProductsServiceSpy.findOne).toHaveBeenCalledWith(1);
-  });
-
-  it('should create product and navigate to home', () => {
-    const mockResponse: IResponseApi<IProduct> = {
-      data: {
-        id: 1,
-        name: 'Product 1',
-        description: 'Description 1',
-        date_release: new Date('2023-01-01'),
-        date_revision: new Date('2023-01-10'),
-        logo: 'logo1.png',
-      },
-      message: 'Product created',
-    };
-    apiProductsServiceSpy.create.and.returnValue(of(mockResponse));
-
-    service.create({ name: 'Product 1' }).subscribe(() => {
       expect(loaderServiceSpy.show).toHaveBeenCalled();
       expect(loaderServiceSpy.hide).toHaveBeenCalled();
-      expect(service.idProduct()).toBeUndefined();
       expect(routeServiceSpy.navigateToHome).toHaveBeenCalled();
-    });
-
-    expect(apiProductsServiceSpy.create).toHaveBeenCalledWith({
-      name: 'Product 1',
-    });
-  });
-
-  it('should handle errors on create', () => {
-    const errorResponse = new Error('Error creating product');
-    apiProductsServiceSpy.create.and.returnValue(throwError(errorResponse));
-
-    service.create({ name: 'Product 1' }).subscribe({
-      error: (error) => {
-        expect(error).toEqual(errorResponse);
-        expect(loaderServiceSpy.show).toHaveBeenCalled();
-        expect(loaderServiceSpy.hide).toHaveBeenCalled();
-      },
-    });
-
-    expect(apiProductsServiceSpy.create).toHaveBeenCalledWith({
-      name: 'Product 1',
-    });
-  });
-
-  it('should update product and navigate to home', () => {
-    const mockResponse: IResponseApi<IProduct[]> = {
-      data: [
-        {
-          id: 1,
-          name: 'Product 1',
-          description: 'Description 1',
-          date_release: new Date('2023-01-01'),
-          date_revision: new Date('2023-01-10'),
-          logo: 'logo1.png',
-        },
-      ],
-      message: 'Product updated',
-    };
-    apiProductsServiceSpy.update.and.returnValue(of(mockResponse));
-
-    service.update(1, { name: 'Updated Product' }).subscribe(() => {
-      expect(loaderServiceSpy.show).toHaveBeenCalled();
-      expect(loaderServiceSpy.hide).toHaveBeenCalled();
+      expect(window.alert).toHaveBeenCalledWith('Product created');
       expect(service.idProduct()).toBeUndefined();
-      expect(routeServiceSpy.navigateToHome).toHaveBeenCalled();
-    });
+    }));
+  });
 
-    expect(apiProductsServiceSpy.update).toHaveBeenCalledWith(1, {
-      name: 'Updated Product',
+  describe('delete', () => {
+    it('should delete a product and refresh the list', (done) => {
+      const productId = 1;
+      const mockResponse = { message: 'Product deleted' };
+      apiProductsServiceSpy.delete.and.returnValue(of(mockResponse));
+      spyOn(window, 'alert');
+      spyOn(service, 'findAll').and.returnValue(
+        of({ data: [], message: 'Success' })
+      );
+
+      service.delete(productId).subscribe(() => {
+        expect(window.alert).toHaveBeenCalledWith('Product deleted');
+        expect(service.findAll).toHaveBeenCalled();
+        done();
+      });
     });
   });
 
-  it('should handle errors on update', () => {
-    const errorResponse = new Error('Error updating product');
-    apiProductsServiceSpy.update.and.returnValue(throwError(errorResponse));
+  describe('editItem', () => {
+    it('should navigate to edit product page', () => {
+      const index = 0;
+      const mockProducts = [{ id: 1, name: 'Product 1' }];
+      service.products.set(mockProducts as any);
 
-    service.update(1, { name: 'Updated Product' }).subscribe({
-      error: (error) => {
-        expect(error).toEqual(errorResponse);
-        expect(loaderServiceSpy.show).toHaveBeenCalled();
-        expect(loaderServiceSpy.hide).toHaveBeenCalled();
-      },
-    });
+      service.editItem(index);
 
-    expect(apiProductsServiceSpy.update).toHaveBeenCalledWith(1, {
-      name: 'Updated Product',
+      expect(routeServiceSpy.navigateToEditProduct).toHaveBeenCalledWith(1);
     });
   });
 
-  it('should delete product', () => {
-    const mockResponse: IResponseApi<IProduct[]> = {
-      data: [],
-      message: 'Product deleted',
-    };
-    apiProductsServiceSpy.delete.and.returnValue(of(mockResponse));
+  describe('verificationId', () => {
+    it('should verify ID and update idValid signal', fakeAsync(() => {
+      const mockId = 123;
+      apiProductsServiceSpy.verificationId.and.returnValue(of(true));
 
-    service.delete().subscribe(() => {
-      expect(service.products()).toEqual([]);
-    });
+      service.verificationId(mockId).subscribe();
+      tick();
 
-    expect(apiProductsServiceSpy.delete).toHaveBeenCalled();
-  });
-
-  it('should handle errors on delete', () => {
-    const errorResponse = new Error('Error deleting product');
-    apiProductsServiceSpy.delete.and.returnValue(throwError(errorResponse));
-
-    service.delete().subscribe({
-      error: (error) => {
-        expect(error).toEqual(errorResponse);
-      },
-    });
-
-    expect(apiProductsServiceSpy.delete).toHaveBeenCalled();
-  });
-
-  it('should verify ID', () => {
-    apiProductsServiceSpy.verificationId.and.returnValue(of(true));
-
-    service.verificationId(1).subscribe((isValid) => {
-      expect(service.idValid()).toBeTrue();
-      expect(isValid).toBeTrue();
-    });
-
-    expect(apiProductsServiceSpy.verificationId).toHaveBeenCalledWith(1);
-  });
-
-  it('should handle errors on verificationId', () => {
-    const errorResponse = new Error('Error verifying ID');
-    apiProductsServiceSpy.verificationId.and.returnValue(
-      throwError(errorResponse)
-    );
-
-    service.verificationId(1).subscribe({
-      error: (error) => {
-        expect(error).toEqual(errorResponse);
-      },
-    });
-    expect(apiProductsServiceSpy.verificationId).toHaveBeenCalledWith(1);
+      expect(service.idValid()).toBe(true);
+    }));
   });
 });

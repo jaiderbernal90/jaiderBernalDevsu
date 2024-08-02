@@ -1,4 +1,5 @@
-import { Component, Input, output } from '@angular/core';
+import { Component, input, Input, output } from '@angular/core';
+import { ModalService } from '@shared/services/modal.service';
 
 @Component({
   selector: 'app-confirmation-modal',
@@ -8,17 +9,16 @@ import { Component, Input, output } from '@angular/core';
   styleUrl: './confirmation-modal.component.scss',
 })
 export class ConfirmationModalComponent {
-  @Input() show = false;
-  @Input() title = 'Confirmar';
-  @Input() message = '¿Estás seguro?';
-  confirmed = output();
-  cancelled = output();
+  productName = input<string>();
+  confirm = output<boolean>();
 
-  confirm() {
-    this.confirmed.emit();
+  constructor(public _modalSvc: ModalService) {}
+
+  onCancel(): void {
+    this._modalSvc.closeConfirmDialog();
   }
 
-  cancel() {
-    this.cancelled.emit();
+  onConfirm(): void {
+    this._modalSvc.confirmDelete();
   }
 }

@@ -9,8 +9,6 @@ export class ErrorHandlerService {
   constructor () {}
 
   public handleError(error: HttpErrorResponse): Observable<never> {
-    console.log('error -> ', error);
-
     let errorMessage = '';
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Error del lado del cliente: ${error?.error?.message}`;

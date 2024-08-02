@@ -8,6 +8,8 @@ import { LoaderService } from '@shared/services/loader.service';
 import { DataTransformationService } from './data-transformation.service';
 import { RouteService } from './route.service';
 import { IHeader } from '@shared/interfaces/ITable';
+import { ModalService } from '@shared/services/modal.service';
+import { PaginationService } from '@shared/services/pagination.service';
 
 @Injectable({
   providedIn: 'root',
@@ -17,6 +19,10 @@ export class ProductsService {
   private readonly _loaderSvc = inject(LoaderService);
   private readonly _dataTransformationSvc = inject(DataTransformationService);
   private readonly _routeSvc = inject(RouteService);
+  private readonly _modalSvc = inject(ModalService);
+  public readonly _paginationSvc = inject(
+    PaginationService<IProductForTable>
+  );
   public products = signal<IProductForTable[]>([]);
   public idValid = signal<boolean>(false);
   public product = signal<IProduct | undefined>(undefined);
@@ -66,8 +72,16 @@ export class ProductsService {
   public findAll(): Observable<IResponseApi<IProduct[]>> {
     return this._productsAPI.findAll().pipe(
       tap({
-        next: (res: IResponseApi<IProduct[]>) =>
-          this.products.set(this._dataTransformationSvc.transformProductsToTableData(res?.data || [])),
+        next: (res: IResponseApi<IProduct[]>) => {
+          this.products.set(
+            this._dataTransformationSvc.transformProductsToTableData(
+              res?.data || []
+            )
+          );
+          this._paginationSvc.paginatedData.set(
+            this._paginationSvc.getPaginatedData(this.products())
+          );
+        },
         error: (error) => console.error('Error fetching products:', error),
       })
     );
@@ -117,11 +131,13 @@ export class ProductsService {
     );
   }
 
-  public delete(): Observable<IResponseApi<IProduct[]>> {
-    return this._productsAPI.delete().pipe(
+  public delete(productId: number): Observable<IResponseApi<IProduct>> {
+    return this._productsAPI.delete(productId).pipe(
       tap({
-        next: (res: IResponseApi<IProduct[]>) =>
-          this.products.set(res?.data || []),
+        next: (res: IResponseApi<IProduct>) => {
+          alert(res.message);
+          this.findAll().subscribe((res) => {});
+        },
         error: (error) => console.error('Error deleting product:', error),
       })
     );
@@ -143,14 +159,19 @@ export class ProductsService {
   }
 
   public editItem(index: number): void {
-    console.log('editItem desde service', index);
     const productId = this.getIdProduct(index);
     if (productId !== undefined && productId !== null) {
       this._routeSvc.navigateToEditProduct(productId);
     }
   }
 
-  public deleteItem(index?: number): void {
-    console.log('deleteItem desde service');
+  public deleteItem(index: number): void {
+    const productId = this.getIdProduct(index);
+    if (productId !== undefined && productId !== null) {
+      const productName = this.products()[index].name;
+      this._modalSvc.openConfirmDialog(productName || '', () => {
+        this.delete(productId).subscribe((res) => {});
+      });
+    }
   }
 }
