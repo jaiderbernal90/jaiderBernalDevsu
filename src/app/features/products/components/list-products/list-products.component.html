@@ -1,0 +1,10 @@
+<section class="content__products">
+  <div class=" flex justify-between items-center">
+    <app-search (onSearchChange)="onSearchChange($event)"></app-search>
+    <button class="btn btn-primary" [routerLink]="['/','productos', 'crear']" >Agregar</button>
+  </div>
+
+  <app-card [classList]="'mt-24 card-white p-32'">
+    <app-table body [headers]="_productsSvc.headers" [items]="paginatedProducts | filterProducts: _productsSvc.termSearch()" (onChangeItemsPerPage)="updatePaginatedProducts()" (onPageChange)="updatePaginatedProducts()"></app-table>
+  </app-card>
+</section>

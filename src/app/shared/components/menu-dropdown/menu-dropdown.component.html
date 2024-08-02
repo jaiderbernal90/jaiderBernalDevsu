@@ -1,0 +1,15 @@
+<div class="dropdown">
+  <div class="flex justify-end">
+    <button class="btn__no-bg" (click)="toggleMenu()"><div [innerHTML]="iconMenu"></div></button>
+  </div>
+  @if(isOpen()){
+    <ul class="dropdown-menu">
+      @for(action of actions; track $index) {
+        <li (click)="executeAction(action.callback)">
+          {{ action.name }}
+        </li>
+      }
+    </ul>
+  }
+
+</div>

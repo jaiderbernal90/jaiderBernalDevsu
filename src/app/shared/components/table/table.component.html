@@ -1,0 +1,76 @@
+@if(items.length) {
+<table>
+  <thead>
+    <tr>
+      @for (header of headers; track $index) {
+      <td [classList]="header.class">
+        <div class="flex gap-16 align-center py-24 px-8 min-w-200px">
+          {{ header.value }}
+          @if (header.iconInformation) {
+          <div class="icon-information" [innerHTML]="iconInfo"></div>
+          }
+        </div>
+      </td>
+      }
+    </tr>
+  </thead>
+  <tbody>
+    @for (item of items; track item['id']; let idItem = $index) {
+    <tr>
+      @for (header of headers; track $index) {
+      <td [classList]="header.class">
+        @if (header.type === 'image') {
+        <div class="container__logo-table flex justify-center">
+          <div class="container__logo-table--image" [innerHTML]="item[header.key]"></div>
+        </div>
+        }@else {
+        {{ item[header.key] }}
+        }
+
+        @if (header.key === 'actions') {
+        <app-menu-dropdown [actions]="header.actions" [rowIndex]="idItem"></app-menu-dropdown>
+        <app-confirmation-modal ></app-confirmation-modal>
+        }
+      </td>
+      }
+    </tr>
+    }
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="4">
+        <div class="mt-32">
+          {{ items.length }} Resultados
+        </div>
+      </td>
+      <td colspan="1">
+        <div class="flex justify-end mt-8">
+          <button (click)="prevPage()" [ngClass]="{ 'disabled': _paginationSvc.currentPage === 1 }"
+            [disabled]="_paginationSvc.currentPage === 1" class="btn__no-bg">
+            <div [innerHTML]="iconArrowLeft"></div>
+          </button>
+          <button (click)="nextPage()"
+            [ngClass]="{'disabled': _paginationSvc.currentPage * _paginationSvc.itemsPerPage >= _productsSvc.products().length}"
+            [disabled]="_paginationSvc.currentPage * _paginationSvc.itemsPerPage >= _productsSvc.products().length"
+            class="btn__no-bg">
+            <div [innerHTML]="iconArrowRight"></div>
+          </button>
+        </div>
+      </td>
+      <td>
+        <div class="flex justify-end align-center" (change)="onChangeLimit($event)">
+          <select name="" id="" class="select__pages">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+          </select>
+        </div>
+      </td>
+    </tr>
+  </tfoot>
+</table>
+} @else {
+<div class="flex justify-center text-lg">
+  <p>No hay datos</p>
+</div>
+}
