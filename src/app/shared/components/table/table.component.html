@@ -30,7 +30,7 @@
         @if (header.key === 'actions') {
         <app-menu-dropdown [actions]="header.actions" [rowIndex]="idItem"></app-menu-dropdown>
         @if(_modalSvc.showConfirmDialog()) {
-          <app-confirmation-modal [productName]="_productsSvc.product()?.name"></app-confirmation-modal>
+          <app-confirmation-modal ></app-confirmation-modal>
         }
       }
       </td>

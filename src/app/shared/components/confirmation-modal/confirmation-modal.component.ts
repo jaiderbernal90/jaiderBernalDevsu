@@ -9,9 +9,6 @@ import { ModalService } from '@shared/services/modal.service';
   styleUrl: './confirmation-modal.component.scss',
 })
 export class ConfirmationModalComponent {
-  productName = input<string>();
-  confirm = output<boolean>();
-
   constructor(public _modalSvc: ModalService) {}
 
   onCancel(): void {

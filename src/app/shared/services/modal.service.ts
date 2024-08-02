@@ -6,14 +6,14 @@ import { Injectable, signal } from '@angular/core';
 export class ModalService {
   private showConfirmDialogSignal = signal(false);
   private confirmCallback: (() => void) | null = null;
-  private productToDelete: string | null = null;
+  public readonly productToDelete  = signal<string | null>('');
 
   showConfirmDialog(): boolean {
     return this.showConfirmDialogSignal();
   }
 
   openConfirmDialog(productName: string, callback: () => void): void {
-    this.productToDelete = productName;
+    this.productToDelete.set(productName);
     this.confirmCallback = callback;
     this.showConfirmDialogSignal.set(true);
   }
@@ -21,7 +21,7 @@ export class ModalService {
   closeConfirmDialog(): void {
     this.showConfirmDialogSignal.set(false);
     this.confirmCallback = null;
-    this.productToDelete = null;
+    this.productToDelete.set(null);
   }
 
   confirmDelete(): void {
@@ -29,9 +29,5 @@ export class ModalService {
       this.confirmCallback();
     }
     this.closeConfirmDialog();
-  }
-
-  getProductToDelete(): string | null {
-    return this.productToDelete;
   }
 }

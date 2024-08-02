@@ -1,6 +1,8 @@
 <div class="confirm-dialog">
   <div class="confirm-dialog-content">
-    <h2>¿Estás seguro de eliminar el producto {{ productName() }}?</h2>
+    <div class="content__dialog">
+      <h2>¿Estás seguro de eliminar el producto {{ _modalSvc.productToDelete() }}?</h2>
+    </div>
     <div class="actions">
       <button class="btn-cancel" (click)="onCancel()">Cancelar</button>
       <button class="btn-confirm" (click)="onConfirm()">Confirmar</button>
