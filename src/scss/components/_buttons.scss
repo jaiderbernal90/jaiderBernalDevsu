@@ -1,0 +1,43 @@
+.btn-primary {
+  background: $color-yellow;
+  border: 1px solid $color-yellow;
+  padding: 1.6rem 2.4rem;
+  color: #5d6373;
+  font-weight: 700;
+  font-size: 1.4rem;
+  cursor: pointer;
+
+  &:disabled {
+    background: rgba($color-primary, 0.1);
+    color: rgba($color-primary, 0.2);
+    border: 1px solid rgba($color-primary, 0.2);
+    cursor: context-menu;
+  }
+}
+
+.btn-secondary {
+  background: $color-brown;
+  border: 1px solid $color-brown;
+  color: $color-blue-dark;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 1.6rem 2.4rem;
+
+  span {
+    font-size: 1.4rem;
+  }
+}
+
+.btn__no-bg {
+  background: transparent;
+  border: none;
+  color: $bg-secondary;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 1.6rem 2.4rem;
+
+  &.disabled {
+    color: $color-brown;
+    cursor: default;
+  }
+}

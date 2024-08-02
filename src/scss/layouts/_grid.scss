@@ -1,0 +1,18 @@
+.main__container {
+  display: grid;
+  grid-template-rows: minmax(auto, 120px) 1fr;
+  height: 100vh;
+}
+.content__products{
+  display: grid;
+  max-width: 1300px;
+  margin: auto;
+}
+.content__add-products{
+  display: grid;
+  max-width: 900px;
+  margin: auto;
+}
+.col-span-2{
+  grid-column: span 2;
+}

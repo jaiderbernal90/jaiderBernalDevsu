@@ -1,0 +1,71 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: $bg-primary;
+}
+
+main {
+  min-height: 100vh;
+  height: auto;
+  width: 100%;
+}
+
+.content{
+  margin-top: 76px;
+}
+
+.text-center{
+  text-align: center;
+}
+
+
+.gap-16{
+  gap: 16px;
+}
+
+// FLEXBOX PROPERTIES ---------------------------------------------------------------------------------------
+.flex {
+  display: flex;
+}
+
+.align-center{
+  align-items: center;
+}
+
+.justify-center{
+  justify-content: center;
+}
+
+.justify-end{
+  justify-content: end;
+}
+
+.justify-between{
+  justify-content: space-between;
+}
+
+.p-6{
+  padding: 6px;
+}
+
+.p-32{
+  padding: 3.2rem;
+}
+
+.py-24 {
+  padding-top: 2.4rem;
+  padding-bottom: 2.4rem;
+}
+
+.px-8{
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.min-w-260px{
+  min-width: 200px;
+}
+
+.text-lg{
+  font-size: 1.6rem;
+}

@@ -1,0 +1,36 @@
+.p-dropdown {
+  width: 100%;
+}
+
+button, input, optgroup, select, textarea {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.p-inputtext {
+  padding: 0.85rem 0.85rem;
+}
+
+.p-dropdown-label {
+  font-size: 1.2rem;
+  padding: 1.161rem;
+}
+
+.input__text {
+  min-width: 240px;
+  padding: 10px 8px;
+  border-radius: 5px;
+  border: 1px solid #a6a7aa;
+  &:focus{
+    box-shadow: none;
+    outline: none;
+  }
+  &::placeholder{
+    font-size: 1.3rem;
+    font-weight: 500;
+  }
+}
+
+.select__pages{
+  padding: 4px 20px;
+}
